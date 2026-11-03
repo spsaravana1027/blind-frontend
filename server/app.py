@@ -45,8 +45,10 @@ def _init_easyocr_worker():
         print(f"[SERVER NOTICE] EasyOCR async init notice: {e}")
 
 import threading
-ocr_thread = threading.Thread(target=_init_easyocr_worker, daemon=True)
-ocr_thread.start()
+# Lazy load EasyOCR on cloud to keep boot RAM low
+if "RENDER" not in os.environ and "PORT" not in os.environ:
+    ocr_thread = threading.Thread(target=_init_easyocr_worker, daemon=True)
+    ocr_thread.start()
 
 # Try importing Ultralytics YOLO
 try:
@@ -543,6 +545,11 @@ def detect_text_medicines_and_currency(img_np: np.ndarray) -> list:
     Uses full image + central reticle crop for ultra-sharp reading.
     """
     global ocr_reader, HAVE_EASYOCR
+    if not HAVE_EASYOCR and ocr_reader is None:
+        try:
+            _init_easyocr_worker()
+        except Exception:
+            pass
     if not HAVE_EASYOCR or ocr_reader is None:
         return []
 
@@ -1079,13 +1086,17 @@ MOBILE_CAMERA_HTML = """<!DOCTYPE html>
 </html>
 """
 
-@app.get("/camera", response_class=HTMLResponse)
-def mobile_camera_page():
+@app.api_route("/camera", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def mobile_camera_page(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200)
     """Serves the live mobile camera capture app for smartphones."""
     return HTMLResponse(content=MOBILE_CAMERA_HTML)
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def read_root(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200)
     accept_header = request.headers.get("accept", "")
     if "text/html" in accept_header:
         return HTMLResponse(content=MOBILE_CAMERA_HTML)
