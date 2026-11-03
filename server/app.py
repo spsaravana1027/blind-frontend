@@ -1,6 +1,15 @@
 import io
 import os
 import sys
+import gc
+
+# Limit PyTorch CPU threads to keep memory and CPU usage low on cloud instances
+try:
+    import torch
+    torch.set_num_threads(2)
+    torch.set_num_interop_threads(1)
+except Exception:
+    pass
 import re
 import time
 import queue
@@ -1117,6 +1126,11 @@ def read_root(request: Request):
         "endpoints": ["/camera", "/detect", "/alert/fall", "/alert/safe", "/play", "/audio/{filename}", "/tts"]
     }
 
+# Global OCR throttling lock and frame counter to prevent memory spikes
+_last_ocr_time = 0.0
+_ocr_lock = threading.Lock()
+_frame_count = 0
+
 @app.post("/detect")
 async def detect_objects(
     request: Request,
@@ -1153,8 +1167,21 @@ async def detect_objects(
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         img_np = np.array(img)
 
+        global _last_ocr_time, _frame_count
+        _frame_count += 1
+        if _frame_count % 25 == 0:
+            gc.collect()
+
         # 1. First priority: Check medicines, currency, and stairs text via OCR
-        special_items = detect_text_medicines_and_currency(img_np)
+        # Non-blocking throttle: Runs at most once every 1.5s, completely prevents RAM buildup
+        special_items = []
+        now = time.time()
+        if (now - _last_ocr_time >= 1.5) and _ocr_lock.acquire(blocking=False):
+            try:
+                special_items = detect_text_medicines_and_currency(img_np)
+                _last_ocr_time = time.time()
+            finally:
+                _ocr_lock.release()
         if special_items:
             results = []
             for item in special_items:
