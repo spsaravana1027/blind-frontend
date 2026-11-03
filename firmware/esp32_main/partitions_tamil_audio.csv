@@ -1,0 +1,9 @@
+# Custom partition table for ESP32 (4MB flash)
+# Removes OTA duplicate app partition to free space for SPIFFS Tamil audio files.
+# App gets 1.31 MB (firmware uses ~985 KB), SPIFFS gets 2.63 MB.
+#
+# Name,     Type,  SubType,  Offset,    Size,     Flags
+nvs,        data,  nvs,      0x9000,    0x5000,
+phy_init,   data,  phy,      0xe000,    0x1000,
+app0,       app,   factory,  0x10000,   0x150000,
+spiffs,     data,  spiffs,   0x160000,  0x2A0000,

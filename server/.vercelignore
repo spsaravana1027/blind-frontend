@@ -1,0 +1,17 @@
+# Local credentials and SSL keys
+.env
+cert.pem
+key.pem
+
+# Python caches and local test files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+test_*.py
+start_assistant.bat
+
+# Git
+.git
+.gitignore
+

@@ -1,0 +1,30 @@
+# Hardware firmware and build caches
+firmware/
+.pio/
+cp210x_driver/
+blind_project.zip
+data/
+tools/
+rpi/
+docs/
+
+# Local credentials and SSL keys
+.env
+cert.pem
+key.pem
+server/cert.pem
+server/key.pem
+
+# Python caches and local test files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+test_*.py
+server/test_*.py
+server/start_assistant.bat
+
+# Git
+.git
+.gitignore
+

@@ -1,0 +1,24 @@
+# Python Dependencies for Raspberry Pi 3 Smart Assistive System
+# ==============================================================
+
+# Core Math & Data Processing
+numpy>=1.22.0
+requests>=2.28.0
+python-dotenv>=1.0.0
+
+# Hardware GPIO & I2C
+RPi.GPIO>=0.7.1
+smbus2>=0.4.2
+
+# Audio & Voice Output
+pygame>=2.1.2
+
+# Computer Vision & Machine Learning
+# Note: For maximum CPU speed on Raspberry Pi 3, OpenCV & Ultralytics should be installed
+# with minimal overhead. On Raspberry Pi OS Bookworm, Picamera2 is pre-installed via apt.
+opencv-python-headless>=4.6.0
+ultralytics>=8.0.0
+
+# Optional Dependencies (uncomment if enabled in config)
+# easyocr>=1.6.2
+# gTTS>=2.3.0
